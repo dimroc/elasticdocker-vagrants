@@ -5,7 +5,27 @@
 VAGRANTFILE_API_VERSION = "2"
 
 Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
-  config.vm.box = "dimroc/ubuntu14.04"
+  config.vm.provider :virtualbox do |vbox, override|
+    override.vm.box = "dimroc/ubuntu14.04"
+  end
+
+  config.vm.provider :aws do |aws, override|
+    override.vm.box = "dimroc/awsdummy"
+    override.ssh.username = "ubuntu"
+    override.ssh.private_key_path = "~/.ssh/dimitrib.qa.pem"
+
+    aws.access_key_id = ENV["AWS_ACCESS_KEY_ID"]
+    aws.secret_access_key = ENV["AWS_SECRET_ACCESS_KEY"]
+    aws.keypair_name = 'dimitrib'
+
+    aws.ami = "ami-1d8c9574"
+    aws.instance_type = "t2.micro"
+
+    aws.elastic_ip = true
+    aws.associate_public_ip = true
+    aws.subnet_id = "subnet-0901194f"
+    aws.tags = { "Name" => "vagrantaws-base" }
+  end
 
   config.vm.provision "docker", version: "1.1", images: ["ubuntu:14.04"]
   config.vm.provision "shell", inline: 'sudo apt-get update'
